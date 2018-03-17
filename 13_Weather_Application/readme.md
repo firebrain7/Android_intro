@@ -1,7 +1,7 @@
 # A Simple And Good WeatherApp
 > Goal: to create a useful and convinient Weather App
 
-version 2.0: 
+version 1.2: 
   - 1.adding the new icon to the application, 
   - 2.adding the blue background, 
   - 3.adding the refresh button, 
