@@ -3,6 +3,7 @@ package mg.studio.weatherappdesign;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -11,9 +12,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.net.UnknownHostException;
+import java.util.Calendar;
+import java.util.TimeZone;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -31,10 +36,20 @@ public class MainActivity extends AppCompatActivity {
 
     private class DownloadUpdate extends AsyncTask<String, Void, String> {
 
-
         @Override
         protected String doInBackground(String... strings) {
-            String stringUrl = "http://mpianatra.com/Courses/info.txt";
+
+            // Get the LocalIp and then use it to get the weather information.
+            String LocalIp = "223.104.25.255";          // default IP whose location is ChongQing
+            try {
+                String LocalIp1 = InetAddress.getLocalHost().getHostAddress();
+                System.out.print(LocalIp1);
+
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
+
+            String stringUrl = "https://api.seniverse.com/v3/weather/now.json?key=gtzfvskl8srbywpn&location="+ LocalIp +"&language=zh-Hans&unit=c";
             HttpURLConnection urlConnection = null;
             BufferedReader reader;
 
@@ -46,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
 
                 urlConnection.setRequestMethod("GET");
                 urlConnection.connect();
-
+                Log.w("TAG","it is running here");
                 // Read the input stream into a String
                 InputStream inputStream = urlConnection.getInputStream();
                 StringBuffer buffer = new StringBuffer();
@@ -66,8 +81,15 @@ public class MainActivity extends AppCompatActivity {
                     // Stream was empty.  No point in parsing.
                     return null;
                 }
+                Log.w("TAG",buffer.toString());
+
                 //The temperature
-                return buffer.toString();
+                int l = buffer.indexOf("temperature\":") + "temperature:".length() + 2;
+                int r = buffer.indexOf("\"",l + 1);
+                Log.d("ok","l = " + l );
+                Log.d("ok","r = " + r );
+
+                return buffer.substring(l,r);
 
             } catch (MalformedURLException e) {
                 e.printStackTrace();
@@ -82,8 +104,26 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String temperature) {
-            //Update the temperature displayed
+            //update the temprature
             ((TextView) findViewById(R.id.temperature_of_the_day)).setText(temperature);
+
+            //update the day of week
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeZone(TimeZone.getTimeZone("GMT+8:00"));
+            String Str_cnt = String.valueOf(calendar.get(Calendar.DAY_OF_WEEK));
+
+            int cnt = Integer.parseInt(Str_cnt);
+            String[] WeekList = {"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"};
+
+            // update the top
+            ((TextView) findViewById(R.id.top_day_of_week)).setText(WeekList[(cnt - 1) % 7]);
+
+            // update the bottom
+            ((TextView) findViewById(R.id.bottom_day_of_week1)).setText(WeekList[cnt % 7].substring(0,3));
+            ((TextView) findViewById(R.id.bottom_day_of_week2)).setText(WeekList[(cnt + 1) % 7].substring(0,3));
+            ((TextView) findViewById(R.id.bottom_day_of_week3)).setText(WeekList[(cnt + 2) % 7].substring(0,3));
+            ((TextView) findViewById(R.id.bottom_day_of_week4)).setText(WeekList[(cnt + 3) % 7].substring(0,3));
+
         }
     }
 }
